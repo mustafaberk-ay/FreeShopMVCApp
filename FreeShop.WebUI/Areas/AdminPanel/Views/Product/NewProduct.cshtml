@@ -1,0 +1,122 @@
+﻿
+@{
+    ViewData["Title"] = "NewProduct";
+    Layout = "~/Areas/AdminPanel/Views/Shared/_layout.cshtml";
+}
+
+@model List<SelectListItem>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@section scripts
+{
+    <script>
+        $(document).ready(function() {
+            $("#btnSave").click(function() {
+                var vm =
+                {
+                    //Property isimlerini vm dekiler ile aynı vermemiz gerekiyordu.
+                    ProductName: $("#txtProductName").val(),
+                    Price: $("#txtPrice").val(),
+                    Discount: $("#txtDiscount").val(),
+                    CategoryId: $("#ddlCategories").val(),
+                    ShortDescription: $("#txtShortDescription").val(),
+                }
+
+                $.ajax({
+                    url: "/new-product",
+                    method: "post",
+                    dataType: "json",
+                    data: vm,
+                    success: function (response) {
+                        if (response.isOk) {
+                            //Urun basariyla kaydedildiyse, fotografi upload et.
+                            var formData = new FormData();
+                            
+                            var files = $("#fuPhoto")[0].files;
+                            $.each(files, function (i, file) {
+                                formData.append("image[]", file);
+                            });
+                            formData.append("prdId", response.productId);
+
+                            $.ajax({
+                                url: "/product-photo-upload",
+                                method: 'post',
+                                data: formData,
+                                //Bir formdan gelen bilgileri dosyalarken contentType ve processData false yapilir.
+                                contentType: false,
+                                processData: false,
+                                success: function (resp) {
+                                    if (resp.isOk) {
+                                        window.location.href = "/products";
+                                    } else {
+                                        alert("Ürün Kaydedilemedi.");
+                                    }
+                                }
+
+                            });
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+<div class="col-12">
+    <div class="card card-primary">
+        <div class="card-header">
+            <h3 class="card-title">Yeni Ürün Formu</h3>
+        </div>
+        <!-- /.card-header -->
+        <!-- form start -->
+        <form role="form">
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Ürün Adı</label>
+                    <input type="text" class="form-control" id="txtProductName" placeholder="Ürün Adı Giriniz">
+                </div>
+
+                <div class="form-group">
+                    <label>Fiyat</label>
+                    <input type="text" class="form-control" id="txtPrice" placeholder="Fiyat Giriniz">
+                </div>
+
+
+                <div class="form-group">
+                    <label>İndirim</label>
+                    <input type="text" class="form-control" id="txtDiscount" placeholder="İndirim">
+                </div>
+
+                <div class="form-group">
+                    <label>Ürün Açıklaması</label>
+                    <textarea id="txtShortDescription" class="form-control"></textarea>
+                </div>
+
+
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <select id="ddlCategories" class="form-control" asp-items="Model"></select>
+                </div>
+
+
+
+                <div class="form-group">
+                    <label>Fotoğraflar</label>
+                    <div class="input-group">
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="fuPhoto" multiple>
+                            <label class="custom-file-label" for="exampleInputFile">Fotoğraf Seç</label>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+            <!-- /.card-body -->
+
+            <div class="card-footer">
+                <button id="btnSave" type="button" class="btn btn-primary">Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
